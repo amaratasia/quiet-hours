@@ -40,26 +40,31 @@ object QuietController {
     val nowMillis = System.currentTimeMillis()
 
     clearExpiredManualSilence(store, nowMillis)
+    clearExpiredPriorityAlert(store, nowMillis)
 
     val windows = store.windows
     val manualUntil = store.manualSilenceUntilMillis
     val shouldBeSilent = SilenceSchedule.isSilentAt(nowMillis, windows, manualUntil)
     val hasDndAccess = notificationManager.isNotificationPolicyAccessGranted
 
+    val priorityAlertActive = RingerRestore.isPriorityAlertActive(store.priorityAlertUntilMillis, nowMillis)
+
     if (hasDndAccess) {
-      applySilence(audioManager, store, shouldBeSilent, store.quietMode)
+      applySilence(audioManager, store, shouldBeSilent, priorityAlertActive, store.quietMode)
     } else {
       Log.w(TAG, "reconcile($reason): Do Not Disturb access not granted; cannot change ringer state")
     }
 
     val nextBoundary = SilenceSchedule.nextBoundaryAfter(nowMillis, windows, manualUntil)
-    val canScheduleExact = scheduleWakeUp(appContext, nextBoundary)
+    val wakeUpAt = earliestWakeUp(nextBoundary, store.priorityAlertUntilMillis, nowMillis)
+    val canScheduleExact = scheduleWakeUp(appContext, wakeUpAt)
 
     Log.i(
       TAG,
       "reconcile($reason): shouldBeSilent=$shouldBeSilent dndAccess=$hasDndAccess " +
         "ringerMode=${audioManager.ringerMode} manualUntil=$manualUntil " +
-        "windows=${windows.size} nextWakeUp=$nextBoundary exact=$canScheduleExact"
+        "windows=${windows.size} priorityAlertActive=$priorityAlertActive " +
+        "nextWakeUp=$wakeUpAt exact=$canScheduleExact"
     )
 
     return QuietStatus(
@@ -90,15 +95,27 @@ object QuietController {
     if (manualUntil <= nowMillis) store.manualSilenceUntilMillis = null
   }
 
+  private fun clearExpiredPriorityAlert(store: QuietStore, nowMillis: Long) {
+    val alertUntil = store.priorityAlertUntilMillis ?: return
+    if (alertUntil <= nowMillis) store.priorityAlertUntilMillis = null
+  }
+
+  /** While a priority alert plays, also wake at its expiry so the ringer goes quiet even if the process died. */
+  private fun earliestWakeUp(nextBoundary: Long?, priorityAlertUntil: Long?, nowMillis: Long): Long? {
+    val pendingAlertExpiry = priorityAlertUntil?.takeIf { it > nowMillis }
+    return listOfNotNull(nextBoundary, pendingAlertExpiry).minOrNull()
+  }
+
   private fun applySilence(
     audioManager: AudioManager,
     store: QuietStore,
     shouldBeSilent: Boolean,
+    priorityAlertActive: Boolean,
     quietMode: QuietMode
   ) {
     val ringerIsOn = audioManager.ringerMode == AudioManager.RINGER_MODE_NORMAL
 
-    if (shouldBeSilent && ringerIsOn) {
+    if (RingerRestore.shouldApplyQuiet(shouldBeSilent, priorityAlertActive) && ringerIsOn) {
       audioManager.ringerMode = quietMode.ringerMode
       store.silencedByApp = true
       Log.i(TAG, "Set ringer to ${quietMode.key}")

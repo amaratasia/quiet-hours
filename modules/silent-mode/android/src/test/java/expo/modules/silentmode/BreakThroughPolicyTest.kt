@@ -83,4 +83,18 @@ class BreakThroughPolicyTest {
   fun withheldCallerNeverBreaksThrough() {
     assertNull(BreakThroughPolicy.decide(IncomingAlert.PhoneCall(null), listOf(mum), repeatCallersAtThree, 5))
   }
+
+  @Test
+  fun unsavedWhatsAppSenderShownAsNumberMatchesByNumber() {
+    val reason = BreakThroughPolicy.decide(IncomingAlert.WhatsAppMessage("+44 7700 900123"), listOf(mum), repeatCallersOff, 0)
+
+    assertEquals(BreakThroughReason.IMPORTANT_PERSON, reason)
+  }
+
+  @Test
+  fun eachAlertHasASource() {
+    assertEquals(AlertSource.PHONE_CALL, BreakThroughPolicy.sourceOf(IncomingAlert.PhoneCall("1")))
+    assertEquals(AlertSource.WHATSAPP_CALL, BreakThroughPolicy.sourceOf(IncomingAlert.WhatsAppCall("Mum")))
+    assertEquals(AlertSource.WHATSAPP_MESSAGE, BreakThroughPolicy.sourceOf(IncomingAlert.WhatsAppMessage("Mum")))
+  }
 }

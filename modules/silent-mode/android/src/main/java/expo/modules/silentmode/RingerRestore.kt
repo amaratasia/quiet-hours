@@ -11,4 +11,8 @@ object RingerRestore {
   /** A fresh process has no player, but a stored alert still means the app turned the ringer on. */
   fun shouldStopPriorityAlert(isPlaying: Boolean, untilMillis: Long?, nowMillis: Long): Boolean =
     isPlaying || isPriorityAlertActive(untilMillis, nowMillis)
+
+  /** Without a player (fresh process) any stop request may clear the stored alert. */
+  fun isStopForActiveAlert(activeSource: AlertSource?, requestingSource: AlertSource): Boolean =
+    activeSource == null || activeSource == requestingSource
 }

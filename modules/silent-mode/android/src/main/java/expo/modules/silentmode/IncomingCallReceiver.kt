@@ -27,16 +27,19 @@ class IncomingCallReceiver : BroadcastReceiver() {
   }
 
   private fun handleRinging(context: Context, store: QuietStore, state: String, number: String?) {
-    if (!CallRingDeduplicator.isNewRing(state, number, store.lastRingNumber)) return
+    val nowMillis = System.currentTimeMillis()
+    val lastHandledNumber = CallRingDeduplicator.rememberedNumber(store.lastRingNumber, store.lastRingAtMillis, nowMillis)
+    if (!CallRingDeduplicator.isNewRing(state, number, lastHandledNumber)) return
 
     store.lastRingNumber = number
+    store.lastRingAtMillis = nowMillis
     PriorityAlert.handle(context, IncomingAlert.PhoneCall(number), contactNameFor(context, number))
   }
 
   private fun handleCallLeftRinging(context: Context, store: QuietStore, state: String) {
     if (state == TelephonyManager.EXTRA_STATE_IDLE) store.lastRingNumber = null
     if (RingerRestore.shouldStopPriorityAlert(PriorityAlert.isPlaying(), store.priorityAlertUntilMillis, System.currentTimeMillis())) {
-      PriorityAlert.stopRinging(context, "call-$state")
+      PriorityAlert.stopRinging(context, "call-$state", AlertSource.PHONE_CALL)
     }
   }
 

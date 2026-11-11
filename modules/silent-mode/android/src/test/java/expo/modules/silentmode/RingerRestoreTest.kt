@@ -37,4 +37,11 @@ class RingerRestoreTest {
     assertTrue(RingerRestore.shouldStopPriorityAlert(isPlaying = true, untilMillis = null, nowMillis = 1_000L))
     assertFalse(RingerRestore.shouldStopPriorityAlert(isPlaying = false, untilMillis = null, nowMillis = 1_000L))
   }
+
+  @Test
+  fun stopRequestOnlyStopsTheAlertItsSourceStarted() {
+    assertTrue(RingerRestore.isStopForActiveAlert(activeSource = AlertSource.PHONE_CALL, requestingSource = AlertSource.PHONE_CALL))
+    assertFalse(RingerRestore.isStopForActiveAlert(activeSource = AlertSource.PHONE_CALL, requestingSource = AlertSource.WHATSAPP_CALL))
+    assertTrue(RingerRestore.isStopForActiveAlert(activeSource = null, requestingSource = AlertSource.WHATSAPP_CALL))
+  }
 }

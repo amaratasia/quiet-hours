@@ -40,7 +40,7 @@ class QuietNotificationListener : NotificationListenerService() {
   private fun stopRingingIfAlertStored(reason: String) {
     val alertUntil = QuietStore(applicationContext).priorityAlertUntilMillis
     if (RingerRestore.shouldStopPriorityAlert(PriorityAlert.isPlaying(), alertUntil, System.currentTimeMillis())) {
-      PriorityAlert.stopRinging(applicationContext, reason)
+      PriorityAlert.stopRinging(applicationContext, reason, AlertSource.WHATSAPP_CALL)
     }
   }
 

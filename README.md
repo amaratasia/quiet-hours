@@ -30,6 +30,7 @@ The APK is signed with a debug key for sideloading. It is not on the Play Store.
 - It turns the ringer back on only if it silenced the phone itself, so it never undoes silent or vibrate mode that you set yourself.
 - For important people and repeat callers, it listens for the phone starting to ring and for WhatsApp notifications. When one should get through, it turns the ringer on and plays your ringtone or notification sound itself (ringing stops after 60 seconds at most), then goes back to quiet.
 - It never blocks, rejects or delays a call, and it does not take over call screening, so it works alongside Truecaller and other spam blockers.
+- While it rings for an important person, the ringer is fully on, so other calls and notifications in those few seconds make a sound too.
 
 ## iOS
 

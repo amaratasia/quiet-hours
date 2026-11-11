@@ -56,6 +56,10 @@ class QuietStore(context: Context) {
     get() = preferences.getString(KEY_LAST_RING_NUMBER, null)
     set(value) = preferences.edit().putString(KEY_LAST_RING_NUMBER, value).apply()
 
+  var lastRingAtMillis: Long?
+    get() = readOptionalLong(KEY_LAST_RING_AT)
+    set(value) = writeOptionalLong(KEY_LAST_RING_AT, value)
+
   private fun readOptionalLong(key: String): Long? =
     preferences.getLong(key, NO_VALUE).takeIf { it != NO_VALUE }
 
@@ -76,6 +80,7 @@ class QuietStore(context: Context) {
     const val KEY_PRIORITY_ALERT_UNTIL = "priority_alert_until_millis"
     const val KEY_LAST_WHATSAPP_SEEN_AT = "last_whatsapp_seen_at"
     const val KEY_LAST_RING_NUMBER = "last_ring_number"
+    const val KEY_LAST_RING_AT = "last_ring_at_millis"
     const val NO_VALUE = -1L
   }
 }

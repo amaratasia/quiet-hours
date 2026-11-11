@@ -29,7 +29,14 @@ class PhoneNumbersTest {
   }
 
   @Test
-  fun significantDigitsKeepsTheLastTenDigits() {
-    assertEquals("7733916287", PhoneNumbers.significantDigits("+44 7733 916287"))
+  fun significantDigitsKeepsTheLastNineDigits() {
+    assertEquals("733916287", PhoneNumbers.significantDigits("+44 7733 916287"))
+  }
+
+  @Test
+  fun nineDigitNationalNumbersWithTrunkZeroMatch() {
+    assertTrue(PhoneNumbers.sameNumber("+31 6 12345678", "06 12345678"))
+    assertTrue(PhoneNumbers.sameNumber("+33 6 12 34 56 78", "06 12 34 56 78"))
+    assertTrue(PhoneNumbers.sameNumber("+61 412 345 678", "0412 345 678"))
   }
 }

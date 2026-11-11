@@ -35,7 +35,9 @@ class IncomingCallReceiver : BroadcastReceiver() {
 
   private fun handleCallLeftRinging(context: Context, store: QuietStore, state: String) {
     if (state == TelephonyManager.EXTRA_STATE_IDLE) store.lastRingNumber = null
-    if (PriorityAlert.isPlaying()) PriorityAlert.stopRinging(context, "call-$state")
+    if (RingerRestore.shouldStopPriorityAlert(PriorityAlert.isPlaying(), store.priorityAlertUntilMillis, System.currentTimeMillis())) {
+      PriorityAlert.stopRinging(context, "call-$state")
+    }
   }
 
   private fun contactNameFor(context: Context, number: String?): String? {

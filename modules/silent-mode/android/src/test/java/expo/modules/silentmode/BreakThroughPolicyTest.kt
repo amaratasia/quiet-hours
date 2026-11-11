@@ -20,7 +20,7 @@ class BreakThroughPolicyTest {
   @Test
   fun unsavedNumberIsKeyedByItsDigits() {
     assertEquals(
-      "number:7733916287",
+      "number:733916287",
       BreakThroughPolicy.callerKey(IncomingAlert.PhoneCall("+44 7733 916287"), contactNameForNumber = null)
     )
   }

@@ -30,4 +30,11 @@ class RingerRestoreTest {
   fun noAlertIsNotActive() {
     assertFalse(RingerRestore.isPriorityAlertActive(untilMillis = null, nowMillis = 0L))
   }
+
+  @Test
+  fun callEndingStopsAStoredAlertEvenWithoutAPlayer() {
+    assertTrue(RingerRestore.shouldStopPriorityAlert(isPlaying = false, untilMillis = 60_000L, nowMillis = 1_000L))
+    assertTrue(RingerRestore.shouldStopPriorityAlert(isPlaying = true, untilMillis = null, nowMillis = 1_000L))
+    assertFalse(RingerRestore.shouldStopPriorityAlert(isPlaying = false, untilMillis = null, nowMillis = 1_000L))
+  }
 }

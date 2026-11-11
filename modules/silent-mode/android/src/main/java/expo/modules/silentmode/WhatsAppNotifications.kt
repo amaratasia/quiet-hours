@@ -6,7 +6,10 @@ data class NotificationFacts(
   val title: String?,
   val isGroupConversation: Boolean,
   val conversationTitle: String?,
-  val isGroupSummary: Boolean
+  val isGroupSummary: Boolean,
+  val lastMessageSender: String? = null,
+  val onlyAlertOnce: Boolean = false,
+  val hasFullScreenIntent: Boolean = false
 )
 
 object WhatsAppNotifications {
@@ -15,9 +18,10 @@ object WhatsAppNotifications {
 
   fun toAlert(facts: NotificationFacts): IncomingAlert? {
     if (facts.packageName !in PACKAGES || facts.isGroupSummary || isGroupChat(facts)) return null
+    if (facts.onlyAlertOnce || isAnsweredOrEndedCall(facts)) return null
 
-    val senderName = facts.title?.trim()?.takeIf { it.isNotEmpty() } ?: return null
-    return if (facts.category == CATEGORY_CALL) {
+    val senderName = senderNameOf(facts) ?: return null
+    return if (isCall(facts)) {
       IncomingAlert.WhatsAppCall(senderName)
     } else {
       IncomingAlert.WhatsAppMessage(senderName)
@@ -25,6 +29,16 @@ object WhatsAppNotifications {
   }
 
   fun isCall(facts: NotificationFacts): Boolean = facts.category == CATEGORY_CALL
+
+  /** WhatsApp swaps the ringing notification for an ongoing one, without a full-screen intent, once answered. */
+  fun isAnsweredOrEndedCall(facts: NotificationFacts): Boolean = isCall(facts) && !facts.hasFullScreenIntent
+
+  fun isNewCallPost(notificationKey: String, handledCallKeys: Set<String>): Boolean =
+    notificationKey !in handledCallKeys
+
+  private fun senderNameOf(facts: NotificationFacts): String? =
+    listOf(facts.lastMessageSender, facts.title)
+      .firstNotNullOfOrNull { name -> name?.trim()?.takeIf { it.isNotEmpty() } }
 
   private fun isGroupChat(facts: NotificationFacts): Boolean =
     facts.isGroupConversation || facts.conversationTitle != null

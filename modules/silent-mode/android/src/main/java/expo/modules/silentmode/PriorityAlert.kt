@@ -1,5 +1,6 @@
 package expo.modules.silentmode
 
+import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -93,8 +94,8 @@ object PriorityAlert {
 
   private fun play(context: Context, soundUri: Uri, looping: Boolean, capMillis: Long, reason: String) {
     val appContext = context.applicationContext
+    if (!turnRingerOn(appContext, reason)) return
     QuietStore(appContext).priorityAlertUntilMillis = System.currentTimeMillis() + capMillis
-    appContext.getSystemService(AudioManager::class.java).ringerMode = AudioManager.RINGER_MODE_NORMAL
 
     val startedPlayer = runCatching { createPlayer(appContext, soundUri, looping) }
       .onFailure { Log.e(TAG, "PriorityAlert: cannot play $soundUri ($reason); restoring quiet", it) }
@@ -112,6 +113,17 @@ object PriorityAlert {
     Log.i(TAG, "PriorityAlert: playing ${if (looping) "ringtone" else "message sound"} ($reason)")
 
     QuietController.reconcile(appContext, "priority-alert-started:$reason")
+  }
+
+  /** Leaving silent mode needs Do Not Disturb access since Android 7, and the user may have revoked it. */
+  private fun turnRingerOn(context: Context, reason: String): Boolean {
+    if (!context.getSystemService(NotificationManager::class.java).isNotificationPolicyAccessGranted) {
+      Log.w(TAG, "PriorityAlert: Do Not Disturb access revoked; cannot ring for $reason")
+      return false
+    }
+    return runCatching { context.getSystemService(AudioManager::class.java).ringerMode = AudioManager.RINGER_MODE_NORMAL }
+      .onFailure { Log.e(TAG, "PriorityAlert: could not turn the ringer on for $reason", it) }
+      .isSuccess
   }
 
   private fun createPlayer(context: Context, soundUri: Uri, looping: Boolean): MediaPlayer =

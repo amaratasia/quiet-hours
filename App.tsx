@@ -3,9 +3,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import SilentMode, { QuietMode, QuietStatus, QuietWindow } from './modules/silent-mode';
+import { Banner } from './src/components/Banner';
+import { BreakThroughSetupBanners } from './src/components/BreakThroughSetupBanners';
+import { ImportantPeopleSection } from './src/components/ImportantPeopleSection';
+import { RepeatCallersSection } from './src/components/RepeatCallersSection';
 import { WindowRow } from './src/components/WindowRow';
 import { colors } from './src/theme';
 import { EVERY_DAY, formatDuration, formatMoment } from './src/time';
+import { useBreakThroughPermissions } from './src/useBreakThroughPermissions';
 import { useQuietStatus } from './src/useQuietStatus';
 
 const SILENCE_PRESET_MINUTES = [30, 60, 120, 180, 240, 480];
@@ -28,7 +33,17 @@ export default function App() {
 }
 
 function QuietHoursScreen() {
-  const { status, silenceFor, cancelManualSilence, setQuietMode, saveWindows } = useQuietStatus();
+  const {
+    status,
+    refresh,
+    silenceFor,
+    cancelManualSilence,
+    setQuietMode,
+    saveWindows,
+    saveImportantPeople,
+    saveRepeatCallers,
+  } = useQuietStatus();
+  const { requestPhoneAndContacts } = useBreakThroughPermissions(refresh);
 
   const addWindow = () =>
     saveWindows([
@@ -89,6 +104,18 @@ function QuietHoursScreen() {
       <Pressable onPress={addWindow} style={styles.secondaryButton}>
         <Text style={styles.secondaryButtonText}>+ Add schedule</Text>
       </Pressable>
+
+      {status.supported && (
+        <>
+          <ImportantPeopleSection
+            people={status.importantPeople}
+            setup={status.setup}
+            onChange={saveImportantPeople}
+          />
+          <RepeatCallersSection settings={status.repeatCallers} onChange={saveRepeatCallers} />
+          <BreakThroughSetupBanners status={status} onRequestPhoneAndContacts={requestPhoneAndContacts} />
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -159,37 +186,16 @@ function PermissionBanners({ status }: { status: QuietStatus }) {
       {!status.hasDndAccess && (
         <Banner
           message="Allow Do Not Disturb access so Quiet Hours can silence your phone."
-          actionLabel="Allow access"
-          onAction={SilentMode.openDndAccessSettings}
+          actions={[{ label: 'Allow access', onPress: SilentMode.openDndAccessSettings }]}
         />
       )}
       {!status.canScheduleExactAlarms && (
         <Banner
           message="Allow alarms & reminders so silence starts and ends on the exact minute."
-          actionLabel="Allow alarms"
-          onAction={SilentMode.openExactAlarmSettings}
+          actions={[{ label: 'Allow alarms', onPress: SilentMode.openExactAlarmSettings }]}
         />
       )}
     </>
-  );
-}
-
-type BannerProps = {
-  message: string;
-  actionLabel?: string;
-  onAction?: () => void;
-};
-
-function Banner({ message, actionLabel, onAction }: BannerProps) {
-  return (
-    <View style={styles.banner}>
-      <Text style={styles.bannerText}>{message}</Text>
-      {actionLabel && onAction && (
-        <Pressable onPress={onAction} style={styles.bannerButton}>
-          <Text style={styles.bannerButtonText}>{actionLabel}</Text>
-        </Pressable>
-      )}
-    </View>
   );
 }
 
@@ -291,27 +297,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.accent,
     fontSize: 16,
-    fontWeight: '600',
-  },
-  banner: {
-    backgroundColor: colors.warningBackground,
-    borderRadius: 12,
-    gap: 10,
-    padding: 14,
-  },
-  bannerText: {
-    color: colors.warningText,
-    fontSize: 15,
-  },
-  bannerButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.warningText,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  bannerButtonText: {
-    color: colors.warningBackground,
     fontWeight: '600',
   },
 });

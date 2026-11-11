@@ -5,6 +5,8 @@ An Android app that puts your phone's ringer on silent for a set time or on a we
 - **Silence for** 30m, 1h, 2h, 3h, 4h or 8h, starting now.
 - **When quiet**: choose **Silent** or **Vibrate**. The choice applies to timers and schedules.
 - **Schedules**: silent inside each window, such as 3–4 PM on weekdays, and normal ringer outside it. Windows can run past midnight (10 PM–7 AM).
+- **Important people**: pick contacts whose phone calls, WhatsApp calls and one-to-one WhatsApp messages still make a sound while the phone is quiet. Group chats stay silent.
+- **Repeat callers**: optionally ring when the same person calls 2–10 times (you choose) within 5 minutes, even if they are not on your list. Phone and WhatsApp calls from the same contact count together.
 
 Calls and notifications still come through while the phone is silent, without ringing. It does not turn on Do Not Disturb, so no calls are blocked.
 
@@ -13,6 +15,10 @@ Calls and notifications still come through while the phone is silent, without ri
 1. On your Android phone, download `quiet-hours.apk` from the [latest release](https://github.com/amaratasia/quiet-hours/releases/latest) and open it. Allow installs from your browser if Android asks.
 2. Open Quiet Hours and tap **Allow access** to grant Do Not Disturb access. Android requires this permission before an app can switch the ringer to silent.
 3. Tap **Allow alarms** so silence starts and ends on the exact minute.
+4. To use Important people or Repeat callers, allow the banners that appear:
+   - **Phone and contacts**: lets the app see who is calling and match them to your list.
+   - **Notification access**: lets the app see WhatsApp calls and messages, and keeps it running while it rings. On Android 13 and newer, Android blocks this for sideloaded apps at first: open **App info › ⋮ › Allow restricted settings**, then try again.
+   - **Battery**: stops the phone from shutting the app down in the background.
 
 The APK is signed with a debug key for sideloading. It is not on the Play Store.
 
@@ -22,6 +28,9 @@ The APK is signed with a debug key for sideloading. It is not on the Play Store.
 - It schedules one exact alarm for the next time silence starts or ends. When that alarm fires, the app works out whether the phone should be silent, applies it, and schedules the next alarm. The app does not need to stay open.
 - It re-arms the alarm after a reboot, an app update, or a change of clock or time zone.
 - It turns the ringer back on only if it silenced the phone itself, so it never undoes silent or vibrate mode that you set yourself.
+- For important people and repeat callers, it listens for the phone starting to ring and for WhatsApp notifications. When one should get through, it turns the ringer on and plays your ringtone or notification sound itself (ringing stops after 60 seconds at most), then goes back to quiet.
+- It never blocks, rejects or delays a call, and it does not take over call screening, so it works alongside Truecaller and other spam blockers.
+- While it rings for an important person, the ringer is fully on, so other calls and notifications in those few seconds make a sound too.
 
 ## iOS
 
@@ -51,4 +60,5 @@ cd android && ./gradlew :silent-mode:testDebugUnitTest
 | --- | --- |
 | `App.tsx`, `src/` | The single screen: status, timer buttons, schedule editor |
 | `modules/silent-mode/android/` | Kotlin native module: the schedule logic (`SilenceSchedule.kt`), ringer mode and alarms (`QuietController.kt`), and boot receivers |
+| `modules/silent-mode/android/…/BreakThroughPolicy.kt` | Decides whether a call or message from an important person or repeat caller gets through; `PriorityAlert.kt` plays it, `IncomingCallReceiver.kt` and `QuietNotificationListener.kt` feed it |
 | `modules/silent-mode/ios/` | iOS stub that stores schedules and reports that silencing is not supported |

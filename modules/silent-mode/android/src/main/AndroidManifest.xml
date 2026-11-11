@@ -2,6 +2,9 @@
   <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
   <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+  <uses-permission android:name="android.permission.READ_CALL_LOG" />
+  <uses-permission android:name="android.permission.READ_CONTACTS" />
 
   <application>
     <receiver
@@ -17,6 +20,14 @@
         <action android:name="android.intent.action.TIME_SET" />
         <action android:name="android.intent.action.TIMEZONE_CHANGED" />
         <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+      </intent-filter>
+    </receiver>
+
+    <receiver
+      android:name="expo.modules.silentmode.IncomingCallReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.PHONE_STATE" />
       </intent-filter>
     </receiver>
   </application>

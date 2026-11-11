@@ -30,6 +30,11 @@ class SilentModeModule : Module() {
       statusToMap(QuietController.reconcile(context, "cancelManualSilence"))
     }
 
+    Function("setQuietMode") { quietModeKey: String ->
+      QuietController.switchQuietMode(context, QuietMode.fromKey(quietModeKey))
+      statusToMap(QuietController.reconcile(context, "setQuietMode($quietModeKey)"))
+    }
+
     Function("setWindows") { serializedWindows: String ->
       QuietStore(context).windows = QuietWindow.listFromJson(serializedWindows)
       statusToMap(QuietController.reconcile(context, "setWindows"))
@@ -54,6 +59,7 @@ class SilentModeModule : Module() {
 
   private fun statusToMap(status: QuietStatus): Map<String, Any?> = mapOf(
     "supported" to true,
+    "quietMode" to status.quietMode.key,
     "hasDndAccess" to status.hasDndAccess,
     "canScheduleExactAlarms" to status.canScheduleExactAlarms,
     "isSilentNow" to status.isSilentNow,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
-import SilentMode, { QuietStatus, QuietWindow } from '../modules/silent-mode';
+import SilentMode, { QuietMode, QuietStatus, QuietWindow } from '../modules/silent-mode';
 
 const STATUS_POLL_INTERVAL_MS = 30_000;
 
@@ -26,6 +26,7 @@ export function useQuietStatus() {
     status,
     silenceFor: (minutes: number) => setStatus(SilentMode.silenceFor(minutes)),
     cancelManualSilence: () => setStatus(SilentMode.cancelManualSilence()),
+    setQuietMode: (quietMode: QuietMode) => setStatus(SilentMode.setQuietMode(quietMode)),
     saveWindows: (windows: QuietWindow[]) => setStatus(SilentMode.setWindows(windows)),
   };
 }

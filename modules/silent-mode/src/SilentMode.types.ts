@@ -7,8 +7,11 @@ export type QuietWindow = {
   enabled: boolean;
 };
 
+export type QuietMode = 'silent' | 'vibrate';
+
 export type NativeQuietStatus = {
   supported: boolean;
+  quietMode: QuietMode;
   hasDndAccess: boolean;
   canScheduleExactAlarms: boolean;
   isSilentNow: boolean;

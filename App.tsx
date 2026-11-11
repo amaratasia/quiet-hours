@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import SilentMode, { QuietStatus, QuietWindow } from './modules/silent-mode';
+import SilentMode, { QuietMode, QuietStatus, QuietWindow } from './modules/silent-mode';
 import { WindowRow } from './src/components/WindowRow';
 import { colors } from './src/theme';
 import { EVERY_DAY, formatDuration, formatMoment } from './src/time';
@@ -11,6 +11,10 @@ import { useQuietStatus } from './src/useQuietStatus';
 const SILENCE_PRESET_MINUTES = [30, 60, 120, 180, 240, 480];
 const DEFAULT_WINDOW_START_MINUTE = 15 * 60;
 const DEFAULT_WINDOW_END_MINUTE = 16 * 60;
+const QUIET_MODE_OPTIONS: { quietMode: QuietMode; label: string }[] = [
+  { quietMode: 'silent', label: 'Silent' },
+  { quietMode: 'vibrate', label: 'Vibrate' },
+];
 
 export default function App() {
   return (
@@ -24,7 +28,7 @@ export default function App() {
 }
 
 function QuietHoursScreen() {
-  const { status, silenceFor, cancelManualSilence, saveWindows } = useQuietStatus();
+  const { status, silenceFor, cancelManualSilence, setQuietMode, saveWindows } = useQuietStatus();
 
   const addWindow = () =>
     saveWindows([
@@ -53,6 +57,9 @@ function QuietHoursScreen() {
 
       {status.supported && (
         <>
+          <Text style={styles.sectionTitle}>When quiet</Text>
+          <QuietModePicker selectedQuietMode={status.quietMode} onSelect={setQuietMode} />
+
           <Text style={styles.sectionTitle}>Silence for</Text>
           <View style={styles.presetGrid}>
             {SILENCE_PRESET_MINUTES.map((minutes) => (
@@ -86,8 +93,36 @@ function QuietHoursScreen() {
   );
 }
 
+type QuietModePickerProps = {
+  selectedQuietMode: QuietMode;
+  onSelect: (quietMode: QuietMode) => void;
+};
+
+function QuietModePicker({ selectedQuietMode, onSelect }: QuietModePickerProps) {
+  return (
+    <View style={styles.quietModePicker}>
+      {QUIET_MODE_OPTIONS.map(({ quietMode, label }) => {
+        const selected = quietMode === selectedQuietMode;
+        return (
+          <Pressable
+            key={quietMode}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            onPress={() => onSelect(quietMode)}
+            style={[styles.quietModeOption, selected && styles.quietModeOptionSelected]}>
+            <Text style={[styles.quietModeText, selected && styles.quietModeTextSelected]}>
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function StatusCard({ status }: { status: QuietStatus }) {
-  const headline = status.isSilentNow ? 'Silent' : 'Ringer on';
+  const quietHeadline = status.quietMode === 'vibrate' ? 'Vibrate' : 'Silent';
+  const headline = status.isSilentNow ? quietHeadline : 'Ringer on';
   const detail = describeNextChange(status);
 
   return (
@@ -203,6 +238,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   statusTextSilent: {
+    color: colors.accentText,
+  },
+  quietModePicker: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 4,
+    padding: 4,
+  },
+  quietModeOption: {
+    alignItems: 'center',
+    borderRadius: 9,
+    flex: 1,
+    paddingVertical: 12,
+  },
+  quietModeOptionSelected: {
+    backgroundColor: colors.accent,
+  },
+  quietModeText: {
+    color: colors.textMuted,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  quietModeTextSelected: {
     color: colors.accentText,
   },
   presetGrid: {

@@ -4,6 +4,7 @@ import ExpoModulesCore
 /// schedule so the shared UI works; silencing has to be set up through Settings > Focus.
 public class SilentModeModule: Module {
   private static let windowsKey = "quietHours.windows"
+  private static let quietModeKey = "quietHours.quietMode"
 
   public func definition() -> ModuleDefinition {
     Name("SilentMode")
@@ -17,6 +18,11 @@ public class SilentModeModule: Module {
     }
 
     Function("cancelManualSilence") {
+      return self.status()
+    }
+
+    Function("setQuietMode") { (quietMode: String) in
+      UserDefaults.standard.set(quietMode, forKey: Self.quietModeKey)
       return self.status()
     }
 
@@ -37,6 +43,7 @@ public class SilentModeModule: Module {
   private func status() -> [String: Any?] {
     return [
       "supported": false,
+      "quietMode": UserDefaults.standard.string(forKey: Self.quietModeKey) ?? "silent",
       "hasDndAccess": false,
       "canScheduleExactAlarms": false,
       "isSilentNow": false,

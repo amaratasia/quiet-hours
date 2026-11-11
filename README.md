@@ -1,26 +1,27 @@
 # Quiet Hours
 
-An Android app that puts your phone on silent (Do Not Disturb) for a set time or on a weekly schedule, then turns the ringer back on.
+An Android app that puts your phone's ringer on silent for a set time or on a weekly schedule, then turns the ringer back on.
 
 - **Silence for** 30m, 1h, 2h, 3h, 4h or 8h, starting now.
+- **When quiet**: choose **Silent** or **Vibrate**. The choice applies to timers and schedules.
 - **Schedules**: silent inside each window, such as 3–4 PM on weekdays, and normal ringer outside it. Windows can run past midnight (10 PM–7 AM).
 
-Alarms still ring while the phone is silent. Callers and apps you allowed in your Do Not Disturb settings still get through.
+Calls and notifications still come through while the phone is silent, without ringing. It does not turn on Do Not Disturb, so no calls are blocked.
 
 ## Install
 
 1. On your Android phone, download `quiet-hours.apk` from the [latest release](https://github.com/amaratasia/quiet-hours/releases/latest) and open it. Allow installs from your browser if Android asks.
-2. Open Quiet Hours and tap **Allow access** to grant Do Not Disturb access.
+2. Open Quiet Hours and tap **Allow access** to grant Do Not Disturb access. Android requires this permission before an app can switch the ringer to silent.
 3. Tap **Allow alarms** so silence starts and ends on the exact minute.
 
 The APK is signed with a debug key for sideloading. It is not on the Play Store.
 
 ## How it works
 
-- The app turns Do Not Disturb on with Android's priority-only mode, using `NotificationManager.setInterruptionFilter`.
+- The app sets the ringer to silent or vibrate with `AudioManager.setRingerMode`. It does not change Do Not Disturb.
 - It schedules one exact alarm for the next time silence starts or ends. When that alarm fires, the app works out whether the phone should be silent, applies it, and schedules the next alarm. The app does not need to stay open.
 - It re-arms the alarm after a reboot, an app update, or a change of clock or time zone.
-- It turns Do Not Disturb off only if it turned it on, so it never cancels Do Not Disturb that you set yourself.
+- It turns the ringer back on only if it silenced the phone itself, so it never undoes silent or vibrate mode that you set yourself.
 
 ## iOS
 
@@ -49,5 +50,5 @@ cd android && ./gradlew :silent-mode:testDebugUnitTest
 | Path | What it holds |
 | --- | --- |
 | `App.tsx`, `src/` | The single screen: status, timer buttons, schedule editor |
-| `modules/silent-mode/android/` | Kotlin native module: the schedule logic (`SilenceSchedule.kt`), Do Not Disturb and alarms (`QuietController.kt`), and boot receivers |
+| `modules/silent-mode/android/` | Kotlin native module: the schedule logic (`SilenceSchedule.kt`), ringer mode and alarms (`QuietController.kt`), and boot receivers |
 | `modules/silent-mode/ios/` | iOS stub that stores schedules and reports that silencing is not supported |

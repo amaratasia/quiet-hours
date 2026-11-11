@@ -5,6 +5,10 @@ import ExpoModulesCore
 public class SilentModeModule: Module {
   private static let windowsKey = "quietHours.windows"
   private static let quietModeKey = "quietHours.quietMode"
+  private static let importantPeopleKey = "quietHours.importantPeople"
+  private static let repeatCallersEnabledKey = "quietHours.repeatCallersEnabled"
+  private static let repeatCallersThresholdKey = "quietHours.repeatCallersThreshold"
+  private static let defaultRepeatCallersThreshold = 3
 
   public func definition() -> ModuleDefinition {
     Name("SilentMode")
@@ -31,6 +35,29 @@ public class SilentModeModule: Module {
       return self.status()
     }
 
+    Function("setImportantPeople") { (serializedPeople: String) in
+      UserDefaults.standard.set(serializedPeople, forKey: Self.importantPeopleKey)
+      return self.status()
+    }
+
+    Function("setRepeatCallers") { (enabled: Bool, threshold: Int) in
+      UserDefaults.standard.set(enabled, forKey: Self.repeatCallersEnabledKey)
+      UserDefaults.standard.set(threshold, forKey: Self.repeatCallersThresholdKey)
+      return self.status()
+    }
+
+    Function("openNotificationAccessSettings") {
+      self.openAppSettings()
+    }
+
+    Function("openAppDetailsSettings") {
+      self.openAppSettings()
+    }
+
+    Function("requestIgnoreBatteryOptimisation") {
+      self.openAppSettings()
+    }
+
     Function("openDndAccessSettings") {
       self.openAppSettings()
     }
@@ -49,7 +76,20 @@ public class SilentModeModule: Module {
       "isSilentNow": false,
       "manualSilenceUntil": nil,
       "nextChangeAt": nil,
-      "windowsJson": UserDefaults.standard.string(forKey: Self.windowsKey) ?? "[]"
+      "windowsJson": UserDefaults.standard.string(forKey: Self.windowsKey) ?? "[]",
+      "importantPeopleJson": UserDefaults.standard.string(forKey: Self.importantPeopleKey) ?? "[]",
+      "repeatCallers": [
+        "enabled": UserDefaults.standard.bool(forKey: Self.repeatCallersEnabledKey),
+        "threshold": UserDefaults.standard.object(forKey: Self.repeatCallersThresholdKey) as? Int
+          ?? Self.defaultRepeatCallersThreshold
+      ],
+      "setup": [
+        "hasNotificationAccess": false,
+        "hasPhoneAccess": false,
+        "hasContactsAccess": false,
+        "isBatteryOptimisationIgnored": false,
+        "lastWhatsAppSeenAt": nil
+      ] as [String: Any?]
     ]
   }
 
